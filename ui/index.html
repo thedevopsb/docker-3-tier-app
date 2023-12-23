@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flask MySQL App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        form {
+            margin-bottom: 20px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h2>Flask MySQL App</h2>
+
+    <form id="userForm">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required>
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required>
+        <button type="button" onclick="addUser()">Add User</button>
+    </form>
+
+    <h3>Users:</h3>
+    <table id="userTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script>
+        async function fetchUsers() {
+            const response = await fetch('http://127.0.0.1:5001/get_users');
+            const data = await response.json();
+            console.log(data);
+            const userTable = document.getElementById('userTable').getElementsByTagName('tbody')[0];
+            userTable.innerHTML = '';
+
+            data.users.forEach(user => {
+                const row = userTable.insertRow();
+                row.innerHTML = `<td>${user.id}</td><td>${user.username}</td><td>${user.email}</td><td><button onclick="removeUser(${user.id})">Remove</button></td>`;
+            });
+        }
+
+        // Function to add a new user using the backend API
+        async function addUser() {
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+
+            const response = await fetch('http://127.0.0.1:5001/add_user', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 'username': username, 'email': email }),
+            });
+
+            if (response.ok) {
+                fetchUsers(); // Refresh the user list after adding a new user
+            } else {
+                alert('Failed to add user');
+            }
+        }
+
+        // Function to remove a user using the backend API
+        async function removeUser(userId) {
+            const response = await fetch(`http://127.0.0.1:5001/remove_user/${userId}`, {
+                method: 'DELETE',
+            });
+
+            if (response.ok) {
+                fetchUsers(); // Refresh the user list after removing a user
+            } else {
+                alert('Failed to remove user');
+            }
+        }
+
+        // Fetch and display users when the page loads
+        fetchUsers();
+    </script>
+</body>
+</html>
+
